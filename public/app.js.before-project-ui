@@ -1,0 +1,57 @@
+const $ = s => document.querySelector(s);
+
+async function api(url, options) {
+  const r = await fetch(url, options);
+  return r.json();
+}
+
+async function stats() {
+  const s = await api('/api/stats');
+  $('#projectsCount').textContent = s.projects;
+  $('#filesCount').textContent = s.files;
+  $('#jobsCount').textContent = s.jobs;
+  $('#ticketsCount').textContent = s.tickets;
+}
+
+async function createProject() {
+  const name = prompt('Project name:', 'New project');
+  if (!name) return;
+
+  await api('/api/projects', {
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({ name })
+  });
+
+  await stats();
+  alert('Project created.');
+}
+
+$('#newProject').onclick = createProject;
+$('#newProject2').onclick = createProject;
+
+$('#menu').onclick = () => {
+  $('#sidebar').classList.toggle('open');
+};
+
+document.querySelectorAll('.nav').forEach(button => {
+  button.onclick = () => {
+    document.querySelectorAll('.nav').forEach(x => x.classList.remove('active'));
+    button.classList.add('active');
+    $('#sidebar').classList.remove('open');
+  };
+});
+
+const socket = new WebSocket(
+  `${location.protocol === 'https:' ? 'wss' : 'ws'}://${location.host}`
+);
+
+socket.onopen = () => {
+  $('#connection').textContent = 'Connected';
+};
+
+socket.onclose = () => {
+  $('#connection').textContent = 'Offline';
+};
+
+stats();

@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Velclaw</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/app.css">
+</head>
+<body>
+
+<div class="app">
+
+<header class="topbar">
+  <div class="brand">
+    <div class="brand-mark">V</div>
+    <span>Velclaw</span>
+  </div>
+
+  <div class="top-status">
+    <span class="status-dot"></span>
+    <span id="connection">Connecting</span>
+  </div>
+
+  <button id="menu" class="menu">☰</button>
+</header>
+
+<div class="layout">
+
+<aside class="sidebar" id="sidebar">
+  <div class="nav-label">Workspace</div>
+
+  <button class="nav active" data-view="overview">Overview</button>
+  <button class="nav" data-view="projects">Projects</button>
+  <button class="nav" data-view="files">Files</button>
+  <button class="nav" data-view="agents">Agents</button>
+  <button class="nav" data-view="builds" onclick="location.href='/builds.html'">Builds</button>
+  <button class="nav" data-view="servers" onclick="location.href='/cloud.html'">Servers</button>
+
+  <div class="sidebar-bottom">
+    <div class="nav-label">System</div>
+    <button class="nav" data-view="settings" onclick="location.href='/support.html'">Support</button>
+  </div>
+</aside>
+
+<main class="main">
+
+<section class="hero">
+  <div class="eyebrow">SOFTWARE WORKSPACE</div>
+  <h1>Build software<br><span>with agents.</span></h1>
+  <p>
+    Velclaw brings agents, code, builds, runtime and storage
+    into one workspace.
+  </p>
+
+  <div class="hero-actions">
+    <button class="primary" id="newProject">New project</button>
+    <button class="secondary" onclick="location.href='/studio.html'">Open Studio</button>
+  </div>
+</section>
+
+<section class="stats">
+  <div class="stat">
+    <span>Projects</span>
+    <strong id="projectsCount">0</strong>
+  </div>
+  <div class="stat">
+    <span>Files</span>
+    <strong id="filesCount">0</strong>
+  </div>
+  <div class="stat">
+    <span>Builds</span>
+    <strong id="jobsCount">0</strong>
+  </div>
+  <div class="stat">
+    <span>Support</span>
+    <strong id="ticketsCount">0</strong>
+  </div>
+</section>
+
+<section class="workspace-card">
+  <div class="card-head">
+    <div>
+      <span class="eyebrow">WORKSPACE</span>
+      <h2>Start building</h2>
+    </div>
+    <span class="live">LIVE</span>
+  </div>
+
+  <div class="empty">
+    <div class="empty-icon">&gt;_</div>
+    <h3>Your workspace is ready.</h3>
+    <p>Create a project and let Velclaw become the environment for it.</p>
+    <button class="primary" id="newProject2">Create project</button>
+  </div>
+</section>
+
+</main>
+</div>
+</div>
+
+<script src="/app.js"></script>
+</body>
+</html>

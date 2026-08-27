@@ -1,0 +1,12 @@
+nohup: ignoring input
+
+> velclaw@0.1.0 start
+> node server/index.js
+
+
+  VELCLAW
+  ─────────────────────────
+  Web:  http://127.0.0.1:8787
+  API:  http://127.0.0.1:8787/api/health
+  ─────────────────────────
+
