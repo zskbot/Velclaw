@@ -1,0 +1,8 @@
+node_modules/
+*.log
+*.pid
+*.before-*
+.env
+.env.*
+!.env.example
+.DS_Store
