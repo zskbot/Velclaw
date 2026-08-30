@@ -6,8 +6,8 @@
   "main": "server/index.js",
   "scripts": {
     "dev": "next dev --webpack",
-    "build": "next build --turbopack",
-    "start": "next start",
+    "build": "next build --webpack",
+    "start": "NEXT_TEST_WASM_DIR=\"$PWD/node_modules/@next/swc-wasm-nodejs\" next start",
     "legacy:start": "node server/index.js",
     "lint": "eslint",
     "type-check": "tsc --noEmit",
@@ -74,6 +74,7 @@
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.3",
+    "@next/swc-wasm-nodejs": "^16.0.10",
     "@tailwindcss/postcss": "^4.1.18",
     "@types/ms": "^2.1.0",
     "@types/node": "^20.19.30",

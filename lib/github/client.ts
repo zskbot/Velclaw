@@ -75,3 +75,67 @@ export async function getPullRequestChecks(params: { repoUrl: string; prNumber: 
     return { success: false, error: 'Failed to get pull request checks' }
   }
 }
+interface MergePullRequestParams {
+  repoUrl: string
+  prNumber: number
+  commitTitle?: string
+  commitMessage?: string
+  mergeMethod?: 'merge' | 'squash' | 'rebase'
+}
+
+interface MergePullRequestResult {
+  success: boolean
+  merged?: boolean
+  message?: string
+  sha?: string
+  error?: string
+}
+
+export async function mergePullRequest(params: MergePullRequestParams): Promise<MergePullRequestResult> {
+  const {
+    repoUrl,
+    prNumber,
+    commitTitle,
+    commitMessage,
+    mergeMethod = 'squash',
+  } = params
+
+  try {
+    const octokit = await getOctokit()
+    if (!octokit.auth) return { success: false, error: 'GitHub account not connected' }
+
+    const parsed = parseGitHubUrl(repoUrl)
+    if (!parsed) return { success: false, error: 'Invalid GitHub repository URL' }
+
+    const response = await octokit.rest.pulls.merge({
+      owner: parsed.owner,
+      repo: parsed.repo,
+      pull_number: prNumber,
+      ...(commitTitle !== undefined ? { commit_title: commitTitle } : {}),
+      ...(commitMessage !== undefined ? { commit_message: commitMessage } : {}),
+      merge_method: mergeMethod,
+    })
+
+    return {
+      success: response.data.merged,
+      merged: response.data.merged,
+      message: response.data.message,
+      sha: response.data.sha || undefined,
+      ...(!response.data.merged ? { error: response.data.message } : {}),
+    }
+  } catch (error: unknown) {
+    console.error('Error merging pull request:', error)
+
+    const status =
+      error && typeof error === 'object' && 'status' in error
+        ? (error as { status: number }).status
+        : 0
+
+    if (status === 403) return { success: false, error: 'Permission denied. Check repository access' }
+    if (status === 404) return { success: false, error: 'Repository or pull request not found' }
+    if (status === 405) return { success: false, error: 'Pull request cannot be merged' }
+    if (status === 409) return { success: false, error: 'Pull request is not mergeable' }
+
+    return { success: false, error: 'Failed to merge pull request' }
+  }
+}
