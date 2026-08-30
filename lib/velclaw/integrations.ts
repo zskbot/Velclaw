@@ -31,7 +31,7 @@ export const VELCLAW_INTEGRATIONS: VelclawIntegration[] = [
     id: 'ollama-local',
     name: 'Ollama local agent',
     kind: 'agent',
-    status: 'planned',
+    status: 'available',
     source: 'zskbot/code-ollama',
   },
   {
