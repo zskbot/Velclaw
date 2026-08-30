@@ -1,4 +1,5 @@
 export * from './agents'
+export * from './gito'
 export * from './integrations'
 export * from './review'
 export * from './worktree'
