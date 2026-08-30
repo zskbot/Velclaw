@@ -1,3 +1,4 @@
+import { VelclawFindingsPanel } from '@/components/velclaw-findings-panel'
 import { VelclawLiveStatus } from '@/components/velclaw-live-status'
 import { VelclawTaskConsole } from '@/components/velclaw-task-console'
 import { TaskPageClient } from '@/components/task-page-client'
@@ -17,6 +18,7 @@ export default async function VelclawTaskPage({ params }: Props) {
     <div className="flex min-h-screen flex-col gap-4 p-4">
       <VelclawLiveStatus taskId={taskId} />
       <VelclawTaskConsole taskId={taskId} />
+      <VelclawFindingsPanel taskId={taskId} />
       <div className="min-h-[600px]">
         <TaskPageClient
           taskId={taskId}
