@@ -6,15 +6,14 @@ import { executeCopilotInSandbox } from './copilot'
 import { executeCursorInSandbox } from './cursor'
 import { executeGeminiInSandbox } from './gemini'
 import { executeOpenCodeInSandbox } from './opencode'
+import { executeOllamaInSandbox } from './ollama'
 import { TaskLogger } from '@/lib/utils/task-logger'
 import { Connector } from '@/lib/db/schema'
 
-export type AgentType = 'claude' | 'codex' | 'copilot' | 'cursor' | 'gemini' | 'opencode'
+export type AgentType = 'claude' | 'codex' | 'copilot' | 'cursor' | 'gemini' | 'opencode' | 'ollama'
 
-// Re-export types
 export type { AgentExecutionResult } from '../types'
 
-// Main agent execution function
 export async function executeAgentInSandbox(
   sandbox: Sandbox,
   instruction: string,
@@ -35,25 +34,17 @@ export async function executeAgentInSandbox(
   taskId?: string,
   agentMessageId?: string,
 ): Promise<AgentExecutionResult> {
-  // Check for cancellation before starting agent execution
   if (onCancellationCheck && (await onCancellationCheck())) {
     await logger.info('Task was cancelled before agent execution')
-    return {
-      success: false,
-      error: 'Task was cancelled',
-      cliName: agentType,
-      changesDetected: false,
-    }
+    return { success: false, error: 'Task was cancelled', cliName: agentType, changesDetected: false }
   }
 
-  // For Copilot agent, get the GitHub token from the user's GitHub account
   let githubToken: string | undefined
   if (agentType === 'copilot') {
     const { getUserGitHubToken } = await import('@/lib/github/user-token')
     githubToken = (await getUserGitHubToken()) || undefined
   }
 
-  // Temporarily override process.env with user's API keys if provided
   const originalEnv = {
     OPENAI_API_KEY: process.env.OPENAI_API_KEY,
     GEMINI_API_KEY: process.env.GEMINI_API_KEY,
@@ -77,77 +68,23 @@ export async function executeAgentInSandbox(
   try {
     switch (agentType) {
       case 'claude':
-        return await executeClaudeInSandbox(
-          sandbox,
-          instruction,
-          logger,
-          selectedModel,
-          mcpServers,
-          isResumed,
-          sessionId,
-          taskId,
-          agentMessageId,
-        )
-
+        return await executeClaudeInSandbox(sandbox, instruction, logger, selectedModel, mcpServers, isResumed, sessionId, taskId, agentMessageId)
       case 'codex':
-        return await executeCodexInSandbox(
-          sandbox,
-          instruction,
-          logger,
-          selectedModel,
-          mcpServers,
-          isResumed,
-          sessionId,
-        )
-
+        return await executeCodexInSandbox(sandbox, instruction, logger, selectedModel, mcpServers, isResumed, sessionId)
       case 'copilot':
-        return await executeCopilotInSandbox(
-          sandbox,
-          instruction,
-          logger,
-          selectedModel,
-          mcpServers,
-          isResumed,
-          sessionId,
-          taskId,
-        )
-
+        return await executeCopilotInSandbox(sandbox, instruction, logger, selectedModel, mcpServers, isResumed, sessionId, taskId)
       case 'cursor':
-        return await executeCursorInSandbox(
-          sandbox,
-          instruction,
-          logger,
-          selectedModel,
-          mcpServers,
-          isResumed,
-          sessionId,
-          taskId,
-        )
-
+        return await executeCursorInSandbox(sandbox, instruction, logger, selectedModel, mcpServers, isResumed, sessionId, taskId)
       case 'gemini':
         return await executeGeminiInSandbox(sandbox, instruction, logger, selectedModel, mcpServers)
-
       case 'opencode':
-        return await executeOpenCodeInSandbox(
-          sandbox,
-          instruction,
-          logger,
-          selectedModel,
-          mcpServers,
-          isResumed,
-          sessionId,
-        )
-
+        return await executeOpenCodeInSandbox(sandbox, instruction, logger, selectedModel, mcpServers, isResumed, sessionId)
+      case 'ollama':
+        return await executeOllamaInSandbox(sandbox, instruction, logger, selectedModel)
       default:
-        return {
-          success: false,
-          error: `Unknown agent type: ${agentType}`,
-          cliName: agentType,
-          changesDetected: false,
-        }
+        return { success: false, error: `Unknown agent type: ${agentType}`, cliName: agentType, changesDetected: false }
     }
   } finally {
-    // Restore original environment variables
     process.env.OPENAI_API_KEY = originalEnv.OPENAI_API_KEY
     process.env.GEMINI_API_KEY = originalEnv.GEMINI_API_KEY
     process.env.CURSOR_API_KEY = originalEnv.CURSOR_API_KEY

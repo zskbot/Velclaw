@@ -1,2 +1,7 @@
+export * from './agents'
+export * from './gito'
 export * from './integrations'
+export * from './pipeline'
+export * from './review'
+export * from './review-gate'
 export * from './worktree'
