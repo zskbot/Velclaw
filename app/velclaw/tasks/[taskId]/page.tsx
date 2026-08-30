@@ -1,3 +1,4 @@
+import { VelclawLiveStatus } from '@/components/velclaw-live-status'
 import { VelclawTaskConsole } from '@/components/velclaw-task-console'
 import { TaskPageClient } from '@/components/task-page-client'
 import { getServerSession } from '@/lib/session/get-server-session'
@@ -14,6 +15,7 @@ export default async function VelclawTaskPage({ params }: Props) {
 
   return (
     <div className="flex min-h-screen flex-col gap-4 p-4">
+      <VelclawLiveStatus taskId={taskId} />
       <VelclawTaskConsole taskId={taskId} />
       <div className="min-h-[600px]">
         <TaskPageClient
