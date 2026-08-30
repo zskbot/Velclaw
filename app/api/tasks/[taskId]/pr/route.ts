@@ -4,92 +4,60 @@ import { tasks } from '@/lib/db/schema'
 import { eq, and, isNull } from 'drizzle-orm'
 import { getServerSession } from '@/lib/session/get-server-session'
 import { createPullRequest } from '@/lib/github/client'
+import { getReviewSnapshot } from '@/lib/velclaw/review-store'
+import { evaluateReviewGate } from '@/lib/velclaw/review'
 
 interface RouteParams {
-  params: Promise<{
-    taskId: string
-  }>
+  params: Promise<{ taskId: string }>
 }
 
 export async function POST(request: NextRequest, { params }: RouteParams) {
   try {
     const session = await getServerSession()
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
+    if (!session?.user?.id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
     const { taskId } = await params
-    const body = await request.json()
-    const { title, body: prBody, baseBranch = 'main' } = body
+    const body = await request.json().catch(() => ({}))
 
-    if (!title) {
-      return NextResponse.json({ error: 'PR title is required' }, { status: 400 })
-    }
-
-    // Get the task
     const [task] = await db
       .select()
       .from(tasks)
       .where(and(eq(tasks.id, taskId), eq(tasks.userId, session.user.id), isNull(tasks.deletedAt)))
       .limit(1)
 
-    if (!task) {
-      return NextResponse.json({ error: 'Task not found' }, { status: 404 })
-    }
-
-    // Validate task has required fields
+    if (!task) return NextResponse.json({ error: 'Task not found' }, { status: 404 })
     if (!task.repoUrl || !task.branchName) {
       return NextResponse.json({ error: 'Task does not have repository or branch information' }, { status: 400 })
     }
 
-    // Check if PR already exists
     if (task.prUrl) {
-      return NextResponse.json(
-        {
-          success: true,
-          data: {
-            prUrl: task.prUrl,
-            prNumber: task.prNumber,
-            alreadyExists: true,
-          },
-        },
-        { status: 200 },
-      )
+      return NextResponse.json({ success: true, data: { prUrl: task.prUrl, prNumber: task.prNumber, alreadyExists: true } })
     }
 
-    // Create the pull request
-    const result = await createPullRequest({
-      repoUrl: task.repoUrl,
-      branchName: task.branchName,
-      title,
-      body: prBody,
-      baseBranch,
-    })
-
-    if (!result.success) {
-      return NextResponse.json({ error: result.error || 'Failed to create pull request' }, { status: 500 })
+    const snapshot = await getReviewSnapshot(taskId)
+    if (!snapshot) {
+      return NextResponse.json({ error: 'Review gate is pending: run Gito review before creating a PR' }, { status: 409 })
     }
 
-    // Update task with PR information
-    const [updatedTask] = await db
-      .update(tasks)
-      .set({
-        prUrl: result.prUrl,
-        prNumber: result.prNumber,
-        prStatus: 'open',
-        updatedAt: new Date(),
-      })
-      .where(eq(tasks.id, taskId))
-      .returning()
+    const gate = evaluateReviewGate(snapshot.findings)
+    if (!gate.passed) {
+      return NextResponse.json({ error: 'Review gate blocked pull request creation', blockingFindings: gate.blockingFindings }, { status: 422 })
+    }
 
-    return NextResponse.json({
-      success: true,
-      data: {
-        prUrl: result.prUrl,
-        prNumber: result.prNumber,
-        task: updatedTask,
-      },
-    })
+    if (snapshot.status !== 'passed' && snapshot.status !== 'running') {
+      return NextResponse.json({ error: `Review gate is ${snapshot.status}` }, { status: 409 })
+    }
+
+    const title = typeof body.title === 'string' && body.title.trim() ? body.title.trim() : task.title?.trim() || 'Velclaw changes'
+    const prBody = typeof body.body === 'string' ? body.body : `Created by Velclaw after Gito review for task ${taskId}.`
+    const baseBranch = typeof body.baseBranch === 'string' && body.baseBranch.trim() ? body.baseBranch.trim() : 'main'
+
+    const result = await createPullRequest({ repoUrl: task.repoUrl, branchName: task.branchName, title, body: prBody, baseBranch })
+    if (!result.success) return NextResponse.json({ error: result.error || 'Failed to create pull request' }, { status: 502 })
+
+    const [updatedTask] = await db.update(tasks).set({ prUrl: result.prUrl, prNumber: result.prNumber, prStatus: 'open', updatedAt: new Date() }).where(eq(tasks.id, taskId)).returning()
+
+    return NextResponse.json({ success: true, data: { prUrl: result.prUrl, prNumber: result.prNumber, task: updatedTask } })
   } catch (error) {
     console.error('Error creating pull request:', error)
     return NextResponse.json({ error: 'Failed to create pull request' }, { status: 500 })
