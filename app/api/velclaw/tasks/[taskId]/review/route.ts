@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { getServerSession } from '@/lib/session/get-server-session'
-import { evaluateReviewGate } from '@/lib/velclaw/review'
+import { evaluatePullRequestGate } from '@/lib/velclaw/review-gate'
+import { runGitoReview } from '@/lib/velclaw/gito'
 
 interface Props { params: Promise<{ taskId: string }> }
 
@@ -9,11 +10,20 @@ export async function GET(_request: Request, { params }: Props) {
   const session = await getServerSession()
   if (!session?.user?.id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  // Review storage/provider wiring is intentionally read-only here. The existing task/review
-  // services remain the source of truth; this endpoint normalizes findings for the UI.
-  // Until a review exists, expose a pending gate rather than claiming success.
+  // The existing task detail page owns the sandbox/task lookup. The review endpoint remains
+  // authenticated and exposes only normalized review data. A live Gito run requires a resolved
+  // sandbox context, so this endpoint reports pending until that context is available.
   const findings: never[] = []
-  const gate = evaluateReviewGate(findings)
+  const gate = evaluatePullRequestGate({ findings, checksPassing: false })
 
-  return NextResponse.json({ taskId, findings, gate: 'pending', checksPassing: undefined, blockingFindings: gate.blockingFindings })
+  return NextResponse.json({
+    taskId,
+    findings,
+    gate: gate.allowed ? 'passed' : 'pending',
+    checksPassing: false,
+    blockingFindings: [],
+    reviewAvailable: false,
+    provider: 'gito',
+    reviewRunner: runGitoReview.name,
+  })
 }
