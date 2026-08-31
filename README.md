@@ -21,7 +21,7 @@ Build, inspect, test, deploy, and operate software from one developer-focused wo
 
 ---
 
-<div align="center"><img src="assets/velclaw-intro.gif" alt="Velclaw animated introduction" width="900"></div>
+<div align="center"><img src="assets/velclaw-footer.gif" alt="Velclaw animated introduction" width="900"></div>
 
 ## What is Velclaw?
 
