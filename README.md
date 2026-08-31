@@ -199,7 +199,7 @@ The current project configuration identifies Velclaw as private software. Do not
 
 <div align="center">
 
-<img src="./assets/velclaw-wordmark.svg" alt="Velclaw product introduction" width="760" />
+<img src="./assets/velclaw_restored.png" alt="Velclaw product introduction" width="760" />
 
 <br />
 
