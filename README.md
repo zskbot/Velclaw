@@ -1,6 +1,6 @@
 <div align="center">
 
-<a href="https://github.com/Velclaw/Velclaw"><img src="assets/velclaw-wordmark.svg" alt="Velclaw" width="620"></a>
+<a href="https://github.com/Velclaw/Velclaw"><img src="assets/velclaw-intro.gif" alt="Velclaw" width="620"></a>
 
 # Velclaw
 
