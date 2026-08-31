@@ -214,7 +214,7 @@ The repository includes the official Velclaw mark and a lightweight product-intr
 
 <div align="center">
 
-<img src="./assets/velclaw-mark.svg" alt="Velclaw" width="56" />
+<img src="./assets/velclaw_restored.png" alt="Velclaw" width="56" />
 
 **Velclaw**  
 *Code. Innovate. Elevate.*
