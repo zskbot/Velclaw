@@ -199,11 +199,11 @@ The current project configuration identifies Velclaw as private software. Do not
 
 <div align="center">
 
-<img src="./assets/velclaw_restored.png" alt="Velclaw product introduction" width="760" />
+<img src="./assets/velclaw-terminal.gif" alt="Velclaw product introduction" width="760" />
 
 <br />
 
-<img src="./assets/velclaw-mark.svg" alt="Velclaw mark" width="96" />
+<img src="./assets/velclaw_restored.png" alt="Velclaw mark" width="96" />
 
 </div>
 
