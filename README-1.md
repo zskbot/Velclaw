@@ -194,9 +194,27 @@ The roadmap should reflect shipped work rather than fictional dates or commitmen
 
 The current project configuration identifies Velclaw as private software. Do not claim an open-source license until a `LICENSE` file and public licensing decision are present.
 
+
+## Visual identity
+
+<div align="center">
+
+<img src="./assets/velclaw-intro.gif" alt="Velclaw product introduction" width="760" />
+
+<br />
+
+<img src="./assets/velclaw-mark.svg" alt="Velclaw mark" width="96" />
+
+</div>
+
+The repository includes the official Velclaw mark and a lightweight product-introduction GIF so the project identity remains visible throughout the README rather than only in the hero.
+
+
 ---
 
 <div align="center">
+
+<img src="./assets/velclaw-mark.svg" alt="Velclaw" width="56" />
 
 **Velclaw**  
 *Code. Innovate. Elevate.*
