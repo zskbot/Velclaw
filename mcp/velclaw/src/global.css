@@ -7,6 +7,7 @@
 body { margin: 0; background: var(--color-background-primary, Canvas); color: var(--color-text-primary, CanvasText); }
 main { width: min(720px, 100%); margin: 0 auto; padding: 20px; }
 header, footer { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.actions { display: flex; align-items: center; gap: 8px; }
 .eyebrow { margin: 0 0 4px; font-size: 11px; letter-spacing: .14em; opacity: .65; }
 h1 { margin: 0; font-size: 24px; }
 .muted { margin: 6px 0 0; opacity: .7; font-size: 13px; }
@@ -19,7 +20,10 @@ button:hover { background: color-mix(in srgb, currentColor 8%, transparent); }
 ol { list-style: none; padding: 0; margin: 0 0 20px; border-left: 1px solid color-mix(in srgb, currentColor 16%, transparent); }
 .stage { display: grid; grid-template-columns: 18px 1fr auto; align-items: center; gap: 10px; margin: 0 0 12px -9px; font-size: 14px; }
 .dot { width: 16px; height: 16px; border-radius: 50%; border: 2px solid currentColor; background: var(--color-background-primary, Canvas); }
-.stage.ready .dot { background: currentColor; }
+.stage.passed .dot { background: currentColor; }
+.stage.running .dot { box-shadow: 0 0 0 4px color-mix(in srgb, currentColor 12%, transparent); }
+.stage.blocked .dot, .stage.failed .dot { border-style: dashed; }
 .stage small { font-size: 10px; opacity: .55; }
+.status { border: 1px solid color-mix(in srgb, currentColor 20%, transparent); border-radius: 999px; padding: 5px 8px; font-size: 10px; letter-spacing: .08em; }
 footer { border-top: 1px solid color-mix(in srgb, currentColor 12%, transparent); padding-top: 14px; font-size: 12px; }
-@media (max-width: 520px) { .summary { grid-template-columns: 1fr; } main { padding: 14px; } }
+@media (max-width: 520px) { .summary { grid-template-columns: 1fr; } main { padding: 14px; } .actions { align-items: flex-end; flex-direction: column; } }
