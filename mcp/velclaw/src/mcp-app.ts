@@ -2,25 +2,29 @@ import { App } from '@modelcontextprotocol/ext-apps'
 import type { CallToolResult } from '@modelcontextprotocol/sdk/types.js'
 import './global.css'
 
+type StageState = 'pending' | 'running' | 'passed' | 'blocked' | 'failed'
+
 type Stage = {
   id: string
   label: string
-  state: 'pending' | 'ready'
+  state: StageState
 }
 
 type Pipeline = {
   taskId?: string
   repository?: string
   pullRequestUrl?: string
+  status?: 'pending' | 'running' | 'passed' | 'blocked'
   stages: Stage[]
 }
 
 const root = document.getElementById('root')!
-const app = new App({ name: 'VelClaw', version: '0.1.0' })
+const app = new App({ name: 'VelClaw', version: '0.2.0' })
 
 let latest: Pipeline = {
+  status: 'pending',
   stages: [
-    { id: 'task', label: 'Task', state: 'ready' },
+    { id: 'task', label: 'Task', state: 'passed' },
     { id: 'executor', label: 'Executor', state: 'pending' },
     { id: 'review', label: 'Review', state: 'pending' },
     { id: 'gate', label: 'Gate', state: 'pending' },
@@ -28,8 +32,22 @@ let latest: Pipeline = {
   ],
 }
 
+function escapeHtml(value: string) {
+  return value.replace(/[&<>'"]/g, (character) => ({
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    "'": '&#39;',
+    '"': '&quot;',
+  })[character]!)
+}
+
 function text(result: CallToolResult, fallback: string) {
   return result.content?.find((item) => item.type === 'text')?.text ?? fallback
+}
+
+function stateLabel(state: StageState) {
+  return state.toUpperCase()
 }
 
 function render(data: Pipeline) {
@@ -38,11 +56,15 @@ function render(data: Pipeline) {
       (stage) => `
         <li class="stage ${stage.state}">
           <span class="dot" aria-hidden="true"></span>
-          <span>${stage.label}</span>
-          <small>${stage.state === 'ready' ? 'READY' : 'PENDING'}</small>
+          <span>${escapeHtml(stage.label)}</span>
+          <small>${stateLabel(stage.state)}</small>
         </li>`,
     )
     .join('')
+
+  const task = data.taskId ? escapeHtml(data.taskId) : '—'
+  const repository = data.repository ? escapeHtml(data.repository) : '—'
+  const status = data.status ? data.status.toUpperCase() : 'PENDING'
 
   root.innerHTML = `
     <main>
@@ -52,16 +74,19 @@ function render(data: Pipeline) {
           <h1>VelClaw</h1>
           <p class="muted">Task → executor → review → gate → GitHub PR</p>
         </div>
-        <button id="refresh" type="button">Refresh</button>
+        <div class="actions">
+          <span class="status ${data.status ?? 'pending'}">${status}</span>
+          <button id="refresh" type="button">Refresh</button>
+        </div>
       </header>
       <section class="summary">
-        <div><span>Task</span><strong>${data.taskId ?? '—'}</strong></div>
-        <div><span>Repository</span><strong>${data.repository ?? '—'}</strong></div>
+        <div><span>Task</span><strong>${task}</strong></div>
+        <div><span>Repository</span><strong>${repository}</strong></div>
       </section>
       <ol>${stageHtml}</ol>
       <footer>
         <span id="message">${data.pullRequestUrl ? 'Pull request available.' : 'Waiting for pipeline data.'}</span>
-        ${data.pullRequestUrl ? `<button id="open-pr" type="button">Open PR</button>` : ''}
+        ${data.pullRequestUrl ? '<button id="open-pr" type="button">Open PR</button>' : ''}
       </footer>
     </main>
   `
