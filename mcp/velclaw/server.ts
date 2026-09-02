@@ -12,24 +12,39 @@ import { z } from 'zod'
 const DIST_DIR = path.join(import.meta.dirname, 'dist')
 const RESOURCE_URI = 'ui://velclaw/pipeline.html'
 
+const stageState = z.enum(['pending', 'running', 'passed', 'blocked', 'failed'])
 const pipelineSchema = z.object({
   taskId: z.string().optional(),
   repository: z.string().optional(),
   pullRequestUrl: z.string().url().optional(),
+  stages: z
+    .array(
+      z.object({
+        id: z.enum(['task', 'executor', 'review', 'gate', 'github']),
+        state: stageState,
+      }),
+    )
+    .optional(),
 })
 
-const stages = [
-  { id: 'task', label: 'Task', state: 'ready' as const },
-  { id: 'executor', label: 'Executor', state: 'pending' as const },
-  { id: 'review', label: 'Review', state: 'pending' as const },
-  { id: 'gate', label: 'Gate', state: 'pending' as const },
-  { id: 'github', label: 'GitHub PR', state: 'pending' as const },
+type Stage = {
+  id: 'task' | 'executor' | 'review' | 'gate' | 'github'
+  label: string
+  state: z.infer<typeof stageState>
+}
+
+const defaultStages: Stage[] = [
+  { id: 'task', label: 'Task', state: 'passed' },
+  { id: 'executor', label: 'Executor', state: 'pending' },
+  { id: 'review', label: 'Review', state: 'pending' },
+  { id: 'gate', label: 'Gate', state: 'pending' },
+  { id: 'github', label: 'GitHub PR', state: 'pending' },
 ]
 
 export function createServer(): McpServer {
   const server = new McpServer({
     name: 'VelClaw MCP App',
-    version: '0.1.0',
+    version: '0.2.0',
   })
 
   registerAppTool(
@@ -38,7 +53,7 @@ export function createServer(): McpServer {
     {
       title: 'VelClaw Pipeline Status',
       description:
-        'Show the VelClaw task pipeline: Task, Executor, Review, Gate, and GitHub PR. Returns text fallback plus structured data for the interactive UI.',
+        'Show the VelClaw pipeline state: Task, Executor, Review, Gate, and GitHub PR. Accepts current stage states so the host can render live pipeline progress.',
       inputSchema: pipelineSchema.shape,
       annotations: {
         readOnlyHint: true,
@@ -47,20 +62,33 @@ export function createServer(): McpServer {
       },
       _meta: { ui: { resourceUri: RESOURCE_URI } },
     },
-    async ({ taskId, repository, pullRequestUrl }): Promise<CallToolResult> => ({
-      content: [
-        {
-          type: 'text',
-          text: `VelClaw pipeline for ${taskId ?? 'current task'}: Task ready; Executor pending; Review pending; Gate pending; GitHub PR pending.`,
+    async ({ taskId, repository, pullRequestUrl, stages }): Promise<CallToolResult> => {
+      const stageOverrides = new Map(stages?.map((stage) => [stage.id, stage.state]))
+      const resolvedStages = defaultStages.map((stage) => ({
+        ...stage,
+        state: stageOverrides.get(stage.id) ?? stage.state,
+      }))
+      const blocked = resolvedStages.some((stage) => stage.state === 'blocked' || stage.state === 'failed')
+      const running = resolvedStages.some((stage) => stage.state === 'running')
+      const complete = resolvedStages.every((stage) => stage.state === 'passed')
+      const status = blocked ? 'blocked' : complete ? 'passed' : running ? 'running' : 'pending'
+
+      return {
+        content: [
+          {
+            type: 'text',
+            text: `VelClaw pipeline for ${taskId ?? 'current task'}: ${status}.`,
+          },
+        ],
+        structuredContent: {
+          taskId,
+          repository,
+          pullRequestUrl,
+          status,
+          stages: resolvedStages,
         },
-      ],
-      structuredContent: {
-        taskId,
-        repository,
-        pullRequestUrl,
-        stages,
-      },
-    }),
+      }
+    },
   )
 
   registerAppResource(
